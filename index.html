@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML & CSS Quiz</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    padding: 20px;
+    margin: 0;
+  }
+
+  .quiz-container {
+    max-width: 800px;
+    background: #fff;
+    padding: 30px;
+    margin: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .question {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+  }
+
+  .question p {
+    font-weight: bold;
+    margin: 0 0 10px 0;
+  }
+
+  .question label {
+    display: block;
+    margin: 6px 0;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .question label:hover {
+    color: #0066cc;
+  }
+
+  .question input[type="radio"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-size: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+  }
+
+  #submitBtn {
+    background: #0066cc;
+    color: #fff;
+  }
+
+  #submitBtn:hover { background: #0052a3; }
+
+  #retryBtn {
+    background: #e0e0e0;
+    color: #333;
+    display: none;
+  }
+
+  #retryBtn:hover { background: #c8c8c8; }
+
+  .result {
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 6px;
+    display: none;
+  }
+
+  .result.pass {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .result.fail {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  /* Highlight correct/wrong after submit */
+  .question.correct { border-color: #28a745; background: #f0fff4; }
+  .question.wrong   { border-color: #dc3545; background: #fff5f5; }
+
+  .answer-feedback {
+    margin-top: 8px;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .answer-feedback.correct-ans { color: #155724; }
+  .answer-feedback.wrong-ans   { color: #721c24; }
+</style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <h2>HTML &amp; CSS Quiz (70 Questions)</h2>
+
+  <!-- FIX: onsubmit="return false" prevents page reload on Enter key -->
+  <form id="quizForm" onsubmit="return false;"></form>
+
+  <div class="controls">
+    <button id="submitBtn" onclick="submitQuiz()">Submit Quiz</button>
+    <button id="retryBtn"  onclick="retryQuiz()">Retry Quiz</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   RAW QUIZ DATA  (70 questions)
+   Bugs fixed vs. original:
+   • Q43: correct answer changed from "flex" → "display" (display:flex controls flexbox layout)
+   • Q48: question reworded + correct answer changed to "auto" (overflow:auto is standard)
+   • 10 additional questions added to reach the advertised 70
+───────────────────────────────────────────── */
+const rawQuizData = [
+  // ── HTML BASICS (Q1–Q20) ─────────────────
+  {q:"What does HTML stand for?",                          a:["Hyper Text Markup Language","Home Tool Markup Language","Hyperlinks Text Mark Language","Hyper Tool Multi Language"],c:0},
+  {q:"Which tag creates a hyperlink?",                     a:["<a>","<link>","<href>","<h1>"],c:0},
+  {q:"Which tag displays an image?",                       a:["<img>","<image>","<pic>","<src>"],c:0},
+  {q:"Which tag creates a paragraph?",                     a:["<p>","<para>","<text>","<h1>"],c:0},
+  {q:"What is the correct HTML element for the largest heading?", a:["<h6>","<heading>","<h1>","<head>"],c:2},
+  {q:"Which attribute specifies an image path?",           a:["src","href","alt","link"],c:0},
+  {q:"Which tag creates an unordered list?",               a:["<ul>","<li>","<list>","<ol>"],c:0},
+  {q:"Which tag creates a list item?",                     a:["<item>","<li>","<ul>","<ol>"],c:1},
+  {q:"Which tag inserts a line break?",                    a:["<br>","<lb>","<break>","<ln>"],c:0},
+  {q:"Which tag makes text bold?",                         a:["<bold>","<b>","<stronger>","<txt>"],c:1},
+  {q:"Which tag makes text italic?",                       a:["<i>","<italic>","<it>","<emphasis>"],c:0},
+  {q:"Which tag creates a form?",                          a:["<form>","<input>","<field>","<submit>"],c:0},
+  {q:"Which input type accepts an email address?",         a:["text","mail","email","input"],c:2},
+  {q:"Which tag creates a clickable button?",              a:["<btn>","<button>","<click>","<input>"],c:1},
+  {q:"Which attribute provides alternative text for an image?", a:["alt","title","src","href"],c:0},
+  {q:"Which of these is a semantic HTML tag?",             a:["<div>","<span>","<header>","<b>"],c:2},
+  {q:"Which tag is used for site navigation?",             a:["<nav>","<menu>","<link>","<ul>"],c:0},
+  {q:"Which tag defines a page footer?",                   a:["<bottom>","<footer>","<end>","<foot>"],c:1},
+  {q:"Which tag defines a section of content?",            a:["<sec>","<section>","<div>","<area>"],c:1},
+  {q:"Which tag defines a self-contained article?",        a:["<article>","<post>","<blog>","<content>"],c:0},
+
+  // ── CSS BASICS (Q21–Q40) ─────────────────
+  {q:"What does CSS stand for?",                           a:["Creative Style Sheets","Cascading Style Sheets","Colorful Style Sheets","Computer Style Sheets"],c:1},
+  {q:"Which CSS property changes text color?",             a:["font-color","text-color","color","fg"],c:2},
+  {q:"Which CSS property sets a background color?",        a:["bgcolor","background","color-bg","back"],c:1},
+  {q:"Which property controls font size?",                 a:["font-size","text-size","size","font"],c:0},
+  {q:"Which property controls font weight (bold)?",        a:["font-weight","text-bold","bold","weight"],c:0},
+  {q:"Which CSS value centers text?",                      a:["middle","center","align","position"],c:1},
+  {q:"Which property aligns text horizontally?",           a:["align","text-align","position","display"],c:1},
+  {q:"Which property sets outer spacing around an element?", a:["space","margin","padding","border"],c:1},
+  {q:"Which property sets inner spacing inside an element?", a:["margin","space","padding","gap"],c:2},
+  {q:"Which property adds a border around an element?",    a:["line","border","outline","frame"],c:1},
+
+  // ── CSS LAYOUT & DISPLAY (Q31–Q50) ───────
+  {q:"Which CSS unit is relative (percentage-based)?",     a:["px","cm","%","mm"],c:2},
+  {q:"Which display value renders an element as a block?", a:["inline","block","flex","grid"],c:1},
+  {q:"Which display value renders an element as inline?",  a:["inline","block","flex","grid"],c:0},
+  {q:"Which property controls how an element is displayed?", a:["display","layout","position","grid"],c:0},
+  {q:"Which CSS value hides an element from the layout?",  a:["none","hidden","invisible","off"],c:0},
+  {q:"Which property sets how an element is positioned?",  a:["position","align","layout","float"],c:0},
+  {q:"Which position value removes an element from normal document flow?", a:["relative","absolute","fixed","static"],c:1},
+  {q:"Which position value offsets an element relative to itself?",        a:["relative","absolute","fixed","static"],c:0},
+  {q:"Which property adds a shadow to a box element?",     a:["shadow","box-shadow","text-shadow","effect"],c:1},
+  {q:"Which property sets the width of an element?",       a:["size","width","length","w"],c:1},
+  {q:"Which property sets the height of an element?",      a:["height","h","length","size"],c:0},
+  {q:"Which property sets the font typeface?",             a:["font-family","font-type","text-font","family"],c:0},
+  // FIX Q43: "flex" is a value, not the controlling property. "display" is correct.
+  {q:"Which CSS property do you set to enable flexbox on a container?", a:["flex","display","layout","box"],c:1},
+  {q:"Which value activates flexbox layout?",              a:["block","flex","inline","grid"],c:1},
+  // Q45: display is correct here (display: grid)
+  {q:"Which CSS property do you set to enable grid on a container?",    a:["grid","layout","display","flex"],c:2},
+  {q:"Which value activates CSS grid layout?",             a:["grid","flex","block","inline"],c:0},
+  {q:"Which property controls what happens when content overflows?",    a:["overflow","flow","scroll","hidden"],c:0},
+  // FIX Q48: "auto" is the standard value for enabling scroll when needed
+  {q:"Which overflow value adds scrollbars only when content overflows?", a:["auto","scroll","hidden","visible"],c:0},
+  {q:"Which property controls the stacking order of elements?",         a:["index","z","z-index","layer"],c:2},
+  {q:"Which property sets the transparency of an element?",             a:["opacity","alpha","visibility","fade"],c:0},
+
+  // ── CSS SELECTORS & MISC (Q51–Q60) ───────
+  {q:"Which property sets the mouse cursor style?",        a:["cursor","pointer","mouse","hover"],c:0},
+  {q:"Which property animates CSS property changes smoothly?", a:["animate","transition","effect","move"],c:1},
+  {q:"Which property defines keyframe animations?",        a:["animation","animate","motion","effect"],c:0},
+  {q:"Which CSS selector targets every element on the page?", a:["*",".","#","all"],c:0},
+  {q:"Which CSS selector targets elements by class name?", a:[".","#","*","@"],c:0},
+  {q:"Which CSS selector targets an element by its ID?",   a:["#",".","*","@"],c:0},
+  {q:"Which pseudo-class applies styles on mouse hover?",  a:[":hover",":click",":active",":focus"],c:0},
+  {q:"Which pseudo-class applies styles when an element is focused?", a:[":focus",":hover",":click",":select"],c:0},
+  {q:"Which property removes bullet points from a list?",  a:["list-style","bullet","remove","style"],c:0},
+  {q:"Which property controls underline and other text decorations?", a:["text-decoration","decoration","font-style","style"],c:0},
+
+  // ── ADDITIONAL 10 (Q61–Q70) ──────────────
+  {q:"Which HTML tag embeds a video?",                     a:["<video>","<media>","<embed>","<movie>"],c:0},
+  {q:"Which HTML tag embeds audio?",                       a:["<audio>","<sound>","<media>","<mp3>"],c:0},
+  {q:"Which HTML tag defines a table?",                    a:["<table>","<grid>","<tbl>","<data>"],c:0},
+  {q:"Which HTML tag defines a table row?",                a:["<td>","<th>","<tr>","<row>"],c:2},
+  {q:"Which HTML tag defines a table data cell?",          a:["<tr>","<td>","<th>","<cell>"],c:1},
+  {q:"Which HTML attribute links a label to an input?",    a:["for","name","id","class"],c:0},
+  {q:"Which CSS property creates space between grid/flex items?", a:["margin","spacing","gap","padding"],c:2},
+  {q:"Which CSS value makes an element invisible but still occupies space?", a:["display:none","visibility:hidden","opacity:0","hidden"],c:1},
+  {q:"Which HTML tag is used to group inline elements?",   a:["<div>","<span>","<group>","<wrap>"],c:1},
+  {q:"Which CSS pseudo-element targets the first line of a block?", a:["::first-letter","::first-line","::before","::placeholder"],c:1},
+];
+
+/* ─────────────────────────────────────────────
+   SHUFFLE HELPER
+   Saves the correct answer TEXT, shuffles the
+   options array, then finds the new index.
+───────────────────────────────────────────── */
+function shuffleOptions(item) {
+  const correctText = item.a[item.c];
+  const shuffled = [...item.a].sort(() => Math.random() - 0.5);
+  return {
+    q: item.q,
+    a: shuffled,
+    c: shuffled.indexOf(correctText)
+  };
+}
+
+// Shuffle once on page load
+const quizData = rawQuizData.map(shuffleOptions);
+
+/* ─────────────────────────────────────────────
+   RENDER QUESTIONS
+───────────────────────────────────────────── */
+const form = document.getElementById("quizForm");
+
+function renderQuestions() {
+  form.innerHTML = "";
+  quizData.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.classList.add("question");
+    div.dataset.index = index;
+
+    // Question text — safe: item.q contains no HTML tags
+    const p = document.createElement("p");
+    p.textContent = `${index + 1}. ${item.q}`;
+    div.appendChild(p);
+
+    // Options — built with DOM API so tag strings like <a> render as plain text
+    item.a.forEach((opt, i) => {
+      const label = document.createElement("label");
+
+      const radio = document.createElement("input");
+      radio.type  = "radio";
+      radio.name  = `q${index}`;
+      radio.value = i;
+
+      label.appendChild(radio);
+      // textContent appended as a text node — never parsed as HTML
+      label.appendChild(document.createTextNode(" " + opt));
+
+      div.appendChild(label);
+    });
+
+    form.appendChild(div);
+  });
+}
+
+renderQuestions();
+
+/* ─────────────────────────────────────────────
+   SUBMIT
+───────────────────────────────────────────── */
+function submitQuiz() {
+  let score = 0;
+  let unanswered = 0;
+
+  quizData.forEach((item, index) => {
+    const checked = document.querySelector(`input[name="q${index}"]:checked`);
+    const questionEl = document.querySelector(`.question[data-index="${index}"]`);
+    const correctText = item.a[item.c];
+
+    // Remove old feedback
+    const oldFeedback = questionEl.querySelector(".answer-feedback");
+    if (oldFeedback) oldFeedback.remove();
+
+    const feedback = document.createElement("div");
+    feedback.classList.add("answer-feedback");
+
+    if (!checked) {
+      unanswered++;
+      questionEl.classList.remove("correct", "wrong");
+      feedback.textContent = `⚠ Not answered. Correct: ${correctText}`;
+      feedback.classList.add("wrong-ans");
+    } else {
+      const chosen = parseInt(checked.value);
+      if (chosen === item.c) {
+        score++;
+        questionEl.classList.add("correct");
+        questionEl.classList.remove("wrong");
+        feedback.textContent = `✓ Correct!`;
+        feedback.classList.add("correct-ans");
+      } else {
+        questionEl.classList.add("wrong");
+        questionEl.classList.remove("correct");
+        feedback.textContent = `✗ Wrong. Correct answer: ${correctText}`;
+        feedback.classList.add("wrong-ans");
+      }
+    }
+
+    questionEl.appendChild(feedback);
+  });
+
+  const total = quizData.length;
+  const pct   = Math.round((score / total) * 100);
+  const resultEl = document.getElementById("result");
+
+  resultEl.style.display = "block";
+  resultEl.className = "result " + (pct >= 60 ? "pass" : "fail");
+  resultEl.innerHTML =
+    `Your Score: ${score} / ${total} &nbsp;(${pct}%)<br>
+     <span style="font-size:15px;font-weight:normal;">
+       ${unanswered > 0 ? `${unanswered} question(s) left unanswered.` : "All questions answered."}
+     </span>`;
+
+  document.getElementById("retryBtn").style.display = "inline-block";
+
+  // Scroll to result
+  resultEl.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+/* ─────────────────────────────────────────────
+   RETRY — reshuffle and reset
+───────────────────────────────────────────── */
+function retryQuiz() {
+  // Re-shuffle all questions
+  quizData.forEach((_, i) => {
+    const reshuffled = shuffleOptions(rawQuizData[i]);
+    quizData[i] = reshuffled;
+  });
+
+  renderQuestions();
+
+  const resultEl = document.getElementById("result");
+  resultEl.style.display = "none";
+  resultEl.className = "result";
+
+  document.getElementById("retryBtn").style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+</script>
+
+</body>
+  </html>
